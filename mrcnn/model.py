@@ -22,6 +22,10 @@ import tensorflow.keras.backend as K
 import tensorflow.keras.layers as KL
 #import keras.engine as KE
 import tensorflow.keras.models as KM
+import tensorflow.keras.regularizers as KR
+import tensorflow.keras.callbacks as KC
+import tensorflow.keras.utils as KU
+from tensorflow.keras.optimizers import RMSprop, Adam, SGD
 
 from mrcnn import utils
 
@@ -2157,7 +2161,7 @@ class MaskRCNN():
         """Downloads ImageNet trained weights from Keras.
         Returns path to weights file.
         """
-        from keras.utils.data_utils import get_file
+        from KU.data_utils import get_file
         TF_WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/'\
                                  'releases/download/v0.2/'\
                                  'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5'
@@ -2172,7 +2176,7 @@ class MaskRCNN():
         metrics. Then calls the Keras compile() function.
         """
         # Optimizer object
-        optimizer = keras.optimizers.SGD(
+        optimizer = SGD(
             lr=learning_rate, momentum=momentum,
             clipnorm=self.config.GRADIENT_CLIP_NORM)
         # Add Losses
@@ -2194,7 +2198,7 @@ class MaskRCNN():
         # Add L2 Regularization
         # Skip gamma and beta weights of batch normalization layers.
         reg_losses = [
-            keras.regularizers.l2(self.config.WEIGHT_DECAY)(w) / tf.cast(tf.size(w), tf.float32)
+            KR.l2(self.config.WEIGHT_DECAY)(w) / tf.cast(tf.size(w), tf.float32)
             for w in self.keras_model.trainable_weights
             if 'gamma' not in w.name and 'beta' not in w.name]
         self.keras_model.add_loss(tf.add_n(reg_losses))
@@ -2213,7 +2217,7 @@ class MaskRCNN():
             loss = (
                 tf.reduce_mean(layer.output, keepdims=True)
                 * self.config.LOSS_WEIGHTS.get(name, 1.))
-            self.keras_model.metrics_tensors.append(loss)
+            self.keras_model.add_metric(loss, name=name, aggregation='mean')
 
     def set_trainable(self, layer_regex, keras_model=None, indent=0, verbose=1):
         """Sets model layers as trainable if their names match
@@ -2354,9 +2358,9 @@ class MaskRCNN():
 
         # Callbacks
         callbacks = [
-            keras.callbacks.TensorBoard(log_dir=self.log_dir,
+            KC.TensorBoard(log_dir=self.log_dir,
                                         histogram_freq=0, write_graph=True, write_images=False),
-            keras.callbacks.ModelCheckpoint(self.checkpoint_path,
+            KC.ModelCheckpoint(self.checkpoint_path,
                                             verbose=0, save_weights_only=True),
         ]
 
@@ -2388,7 +2392,7 @@ class MaskRCNN():
             validation_steps=self.config.VALIDATION_STEPS,
             max_queue_size=100,
             workers=workers,
-            use_multiprocessing=True,
+            use_multiprocessing=False,
         )
         self.epoch = max(self.epoch, epochs)
 
