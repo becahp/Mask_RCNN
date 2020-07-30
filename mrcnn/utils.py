@@ -384,6 +384,13 @@ class Dataset(object):
         class_ids = np.empty([0], np.int32)
         return mask, class_ids
 
+    def load_image_hyperspectral(self, image_id):
+        """Load the specified image and return a [H,W,bands] Numpy array.
+        """
+        # Load image
+        image = skimage.io.imread(self.image_info[image_id]['path'])
+        return image
+
 
 def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square"):
     """Resizes an image keeping the aspect ratio unchanged.
