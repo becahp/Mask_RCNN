@@ -60,6 +60,7 @@ class PivoConfig(Config):
     IMAGE_CHANNEL_COUNT = 7
     IMAGE_MAX_DIM = 256
     IMAGE_MIN_DIM = 256
+    IMAGE_RESIZE_MODE = "none"
 
     MASK_SHAPE = [256, 256]
 
